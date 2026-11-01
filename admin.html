@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin Panel - MashaAllah Store</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui}
+body{background:#0f172a;color:white;min-height:100vh;display:grid;place-items:center;padding:15px}
+.login-box{background:white;color:#0f172a;width:380px;max-width:95vw;padding:25px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.3)}
+.login-box h2{text-align:center;color:#16a34a;margin-bottom:15px}
+input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-top:10px;font-size:14px}
+button{width:100%;padding:12px;background:#16a34a;color:white;border:none;border-radius:10px;margin-top:12px;font-weight:800;cursor:pointer;font-size:14px}
+button.secondary{background:#0f172a}
+.hidden{display:none}
+.dashboard{width:1100px;max-width:95vw;background:white;color:#0f172a;border-radius:20px;padding:20px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:700px){.grid{grid-template-columns:repeat(3,1fr)}}
+.card{background:#f1f5f9;padding:12px;border-radius:14px;text-align:center}
+.card h4{font-size:12px;margin:8px 0}
+.card button{background:#ef4444;padding:6px;font-size:11px;margin-top:5px}
+</style>
+</head>
+<body>
+
+<div id="loginPage" class="login-box">
+<h2>🔐 Admin Login</h2>
+<p style="font-size:12px;text-align:center;color:gray">MashaAllah Store - Chak Jani Kalan</p>
+<input id="lUser" placeholder="Username">
+<input id="lPass" type="password" placeholder="Password">
+<button onclick="doLogin()">Login Karo</button>
+<hr style="margin:15px 0">
+<h3 style="font-size:13px;text-align:center">Naya Admin Banana (Signup)</h3>
+<input id="sUser" placeholder="Naya Username">
+<input id="sPass" type="password" placeholder="Naya Password">
+<button class="secondary" onclick="doSignup()">Signup / Admin Add Karo</button>
+<p id="msg" style="font-size:12px;color:red;text-align:center;margin-top:10px"></p>
+<p style="font-size:11px;text-align:center;margin-top:12px;color:gray">Default: waseem / Waseem@123</p>
+</div>
+
+<div id="dashPage" class="dashboard hidden">
+<div class="top">
+<h2>📊 Admin Dashboard - MashaAllah Store</h2>
+<button onclick="doLogout()" style="width:auto;padding:8px 16px;background:#ef4444">Logout</button>
+</div>
+
+<div style="background:#f1f5f9;padding:15px;border-radius:14px;margin-bottom:15px">
+<h3 style="font-size:14px">➕ Naya Product Add Karo</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+<input id="pEmoji" placeholder="Emoji 🥤">
+<input id="pName" placeholder="Product Name">
+<input id="pMsg" placeholder="WhatsApp Msg (English)">
+</div>
+<button onclick="addProduct()">Product Add Karo</button>
+<button class="secondary" onclick="exportCode()">📥 Full Website Code Export Karo</button>
+</div>
+
+<div class="title">📦 Live Products - Ak Daba = Ak Product</div>
+<div id="productGrid" class="grid"></div>
+
+<div style="margin-top:20px;background:#dcfce7;padding:15px;border-radius:14px">
+<h3 style="font-size:13px">🔒 Security Tips - Live Karne Ke Baad:</h3>
+<p style="font-size:11px;line-height:1.8;margin-top:8px">
+1. is admin.html ko Google se hide rakha hai (noindex).<br>
+2. Hostinger / cPanel me is folder par Password Protection laga do.<br>
+3. Admin ka password har 30 din baad change karo.<br>
+4. HTTPS (SSL) lazmi on rakho.<br>
+5. Kisi ko admin access dena ho to Signup se banao, apna password share mat karo.
+</p>
+</div>
+</div>
+
+<script>
+// Default Admin
+let admins = JSON.parse(localStorage.getItem('store_admins') || '[{"u":"Waseem gujjer","p":"Waseem@123"}]');
+let products = JSON.parse(localStorage.getItem('store_products') || '[]');
+
+function doLogin(){
+let u=document.getElementById('lUser').value.trim();
+let p=document.getElementById('lPass').value.trim();
+let found = admins.find(a=>a.u===u && a.p===p);
+if(found){ localStorage.setItem('isAdmin','yes'); showDash(); }
+else { document.getElementById('msg').innerText='❌ Username ya Password Galat Hai'; }
+}
+function doSignup(){
+let u=document.getElementById('sUser').value.trim();
+let p=document.getElementById('sPass').value.trim();
+if(!u||!p){ document.getElementById('msg').innerText='Username Password Likho'; return; }
+admins.push({u,p}); localStorage.setItem('store_admins', JSON.stringify(admins));
+document.getElementById('msg').innerText='✅ Admin Ban Gaya: '+u+' - Ab Login Karo'; 
+document.getElementById('sUser').value=''; document.getElementById('sPass').value='';
+}
+function doLogout(){ localStorage.removeItem('isAdmin'); location.reload(); }
+function showDash(){
+document.getElementById('loginPage').classList.add('hidden');
+document.getElementById('dashPage').classList.remove('hidden');
+renderProducts();
+}
+function addProduct(){
+let emoji=document.getElementById('pEmoji').value || '📦';
+let name=document.getElementById('pName').value.trim();
+let msg=document.getElementById('pMsg').value.trim() || name;
+if(!name){ alert('Product Name Likho'); return; }
+products.push({emoji,name,msg:encodeURIComponent(msg+' Chahiye')});
+localStorage.setItem('store_products', JSON.stringify(products));
+document.getElementById('pName').value=''; document.getElementById('pMsg').value='';
+renderProducts();
+}
+function deleteProduct(i){ products.splice(i,1); localStorage.setItem('store_products', JSON.stringify(products)); renderProducts(); }
+function renderProducts(){
+let grid=document.getElementById('productGrid'); grid.innerHTML='';
+products.forEach((p,i)=>{
+grid.innerHTML+=`<div class="card"><div style="font-size:30px">${p.emoji}</div><h4>${p.name}</h4><a href="https://wa.me/923034747763?text=${p.msg}" target="_blank" style="font-size:11px;color:#16a34a">Order Link Working ✅</a><button onclick="deleteProduct(${i})">Delete</button></div>`;
+});
+}
+function exportCode(){
+let code = `Products JSON:\n`+JSON.stringify(products, null, 2);
+let blob = new Blob([code], {type:'text/plain'});
+let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='mashaallah-products-backup.txt'; a.click();
+alert('Backup download ho gaya. Isko main website me add kar dunga jab aap kaho ge.');
+}
+if(localStorage.getItem('isAdmin')==='yes'){ showDash(); }
+</script>
+</body>
+</html>
